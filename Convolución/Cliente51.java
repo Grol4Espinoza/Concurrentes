@@ -12,13 +12,12 @@ import redesOk.TCPClient50;
 class Cliente51 {
 
     public int sum[] = new int[40];
-    public int lista_de_imagenes[][][] = new int[1000][][];  
     
+    public int lista_de_imagenes[][][] = new int[10000][][]; 
     String[] pathnames;
     TCPClient50 mTcpClient;
     Scanner sc;
-    LoadImage imagenes;
-	
+    
     public static void main(String[] args) {
         Cliente51 objcli = new Cliente51();
         objcli.iniciar();
@@ -26,21 +25,20 @@ class Cliente51 {
 
     void iniciar() {
         new Thread(
-                new Runnable() {
-
-            @Override
-            public void run() {
-                mTcpClient = new TCPClient50("127.0.0.1",
-                        new TCPClient50.OnMessageReceived() {
-                    @Override
-                    public void messageReceived(String message) {
-                        ClienteRecibe(message);
-                    }
-                }
-                );
-                mTcpClient.run();
+            new Runnable() {
+	            @Override
+	            public void run() {
+	                mTcpClient = new TCPClient50("127.0.0.1",
+	                    new TCPClient50.OnMessageReceived() {
+		                    @Override
+		                    public void messageReceived(String message) {
+		                        ClienteRecibe(message);
+		                    }
+	                	}
+	                );
+	                mTcpClient.run();
+	            }
             }
-        }
         ).start();
         //---------------------------
 
@@ -75,8 +73,14 @@ class Cliente51 {
 
    
     void procesar(int a, int b) {
+    	
+    	
+    	long time_start, time_end;
+    	time_start = System.currentTimeMillis();
+    	
+    	
         int N = (b - a);//14;
-        int H = 12;//luego aumentar
+        int H = 120;//luego aumentar
         int d = (int) ((N) / H);
         Thread todos[] = new Thread[200];
         for (int i = 0; i < (H - 1); i++) { 
@@ -95,99 +99,16 @@ class Cliente51 {
         }
         
              
+        time_end = System.currentTimeMillis();
+        System.out.println("LA TAREA SE DEMORO: "+ ( time_end - time_start )/1000 +" segundos");
         
-        
-        //CONVOLUSION 
-        
-        int nro_filas = 0 ;
-        int nro_columnas = 0 ;        
-        Thread hilos[][] = new Thread[1000][1000];
-        int largo_de_lista = pathnames.length;
-        //BufferedImage[] outputlists = new BufferedImage[100];           
-        for (int n = 0; n <= largo_de_lista; n++) { //recorre la lista de imagenes        	
-        	if(a <=n && n <= b) {
-        		int [][] original_image = lista_de_imagenes[n];        		
-	        	nro_filas = lista_de_imagenes[n].length;
-	        	nro_columnas = lista_de_imagenes[n][0].length;
-	        	//outputlists[n] = new BufferedImage(nro_filas, nro_columnas, BufferedImage.TYPE_INT_RGB);
-        		BufferedImage outputlists = null;
-				try {
-					outputlists = ImageIO.read(new File("C:/Users/espin/OneDrive/Escritorio/imagenesparcial/"+pathnames[n-1]+"_converted.jpg"));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-	        	System.out.println("OPERANDO IMAGEN: "+n);   
-		        for (int x = 0; x < nro_filas; x++) { //recorre las filas de la imagen
-		        	for (int y = 0; y < nro_columnas; y++){ //recorre los pixeles de cada fila	
-		        		//System.out.println("operando imagen: "+n+" hilo["+x+"]["+y+"]"); 
-		        		hilos[x][y] = new convolucion(n, x, y, nro_filas, nro_columnas, original_image,outputlists);
-		        		hilos[x][y].start();
-		        	}		        	
-		        }
-		        //System.out.println("FINALIZADA IMAGEN: "+n);
-        	}
-	        	        
-	    }
-        
-        System.out.println("UNIENDO HILOS.... ");
-                
-        for (int n = 0; n < largo_de_lista; n++) { //recorre la lista de imagenes
-        	if(a <=n && n <= b) {         		
-        		nro_filas = lista_de_imagenes[n].length;
-	        	nro_columnas = lista_de_imagenes[n][1].length;  	        	
-	        	System.out.println("JOIN IMAGEN: "+n); 
-		        for (int x = 0; x < nro_filas; x++) { //recorre las filas de la imagen
-		        	for (int y = 0; y < nro_columnas; y++){ //recorre los pixeles de cada fila	        		
-		        		 try {
-		        			 //System.out.println("uniendo imagen: "+n+" hilo["+x+"]["+y+"]"); 
-		                     hilos[x][y].join();
-		                 } catch (InterruptedException ex) {
-		                     System.out.println("error" + ex);
-		                   }
-		        	}
-		        }		            
-        	}         	
-        }
-        
-        
-        int n = largo_de_lista;
-        if(a <=n && n <= b) {         		
-    		nro_filas = lista_de_imagenes[n].length;
-        	nro_columnas = lista_de_imagenes[n][1].length;  
-        	System.out.println("JOIN IMAGEN: "+n); 
-	        for (int x = 0; x < nro_filas; x++) { //recorre las filas de la imagen
-	        	for (int y = 0; y < nro_columnas; y++){ //recorre los pixeles de cada fila	        		
-	        		 try {
-	        			 //System.out.println("uniendo imagen: "+n+" hilo["+x+"]["+y+"]"); 
-	                     hilos[x][y].join();
-	                 } catch (InterruptedException ex) {
-	                     System.out.println("error" + ex);
-	                   }
-	        	}
-	        }		            
-    	}
-        
-        System.out.println("Guardando imagenes....");
-        
-        for (n = 0; n < largo_de_lista;n++) {   
-        	if(a <=n && n <= b) {
-        		System.out.println("Guardando imagen:  "+n);
-        		LoadImage.saveImageFromMatrix(lista_de_imagenes[n],"C:/Users/espin/OneDrive/Escritorio/imagenesparcial/"+pathnames[n-1]+"_conboluted.jpg");
-        	}
-        }
-        n = largo_de_lista;
-        if(a <=n && n <= b) {
-    		System.out.println("Guardando imagen:  "+n);
-    		LoadImage.saveImageFromMatrix(lista_de_imagenes[n],"C:/Users/espin/OneDrive/Escritorio/imagenesparcial/"+pathnames[n-1]+"_conboluted.jpg");    		
-    	}
-        System.out.println("ESTE CLIENTE TERMINO SU PARTE");
+       
     }
 
     public class tarea0101 extends Thread {
 
         public int max, min, id;
+        private BufferedImage outputlists = null;
 
         tarea0101(int min_, int max_, int id_) {
             max = max_;
@@ -201,12 +122,69 @@ class Cliente51 {
         int[][] myImg;
         int[][] myImgGS;
         // Populates the array with names of files and directories
-        pathnames = f.list();
-        for(int i = min; i<max ; i++){
+        pathnames = f.list();        
+        for(int i = min; i < max ; i++){        	
             myImg = LoadImage.getMatrixOfImage("C:/Users/espin/OneDrive/Escritorio/imagenesparcial/"+pathnames[i-1]);
             myImgGS = LoadImage.toGrayScale(myImg, false);
-            lista_de_imagenes[i] = myImgGS;
             LoadImage.saveImageFromMatrix(myImgGS,"C:/Users/espin/OneDrive/Escritorio/imagenesparcial/"+pathnames[i-1]+"_converted.jpg");
+            
+            //CONVOLUCIÓN  
+            int hx = 2; ////EN CUENTAS FILAS DIVIDO LA IMAGEN?
+            int hy = 2; ////EN CUENTAS COLUMNAS DIVIDO LA IMAGEN?
+            
+            //int lista_de_imagenes[][][] = new int[1000][][];               
+            
+            for(int h = 0; h < 4 ; h++) {  //RELLENO EL ARRAY QUE CONTENDRA LAS IMAGENES MODIFICAS POR EL KERNEL          	
+            	lista_de_imagenes[h] = LoadImage.getMatrixOfImage("C:/Users/espin/OneDrive/Escritorio/imagenesparcial/"+pathnames[i-1]);
+        	}         
+            
+            int nro_filas = 0 ;
+            int nro_columnas = 0 ;        
+            Thread hilos[][] = new Thread[1000][1000];
+        	nro_filas = myImgGS.length;
+        	nro_columnas = myImgGS[0].length;	        	
+    		
+			try {
+				outputlists = ImageIO.read(new File("C:/Users/espin/OneDrive/Escritorio/imagenesparcial/"+pathnames[i-1]+"_converted.jpg"));
+			} catch (IOException e) {					
+				e.printStackTrace();
+			}
+			
+        	//System.out.println("OPERANDO IMAGEN: "+ (i-1)); 
+        	
+        	for(int fila = 0; fila < hx ; fila++) {
+        		for(int columna = 0; columna < hy ; columna++) {
+	        		hilos[fila][columna] = new convolucion(fila,columna, hx*hy, nro_filas, nro_columnas, outputlists);
+	        		hilos[fila][columna].start();
+        		}
+        	}
+	        
+        	//System.out.println("UNIENDO HILOS.... ");            
+             
+        	
+        	//System.out.println("JOIN IMAGEN: "+(i-1)); 
+        	//DOBLE FOR PARA RECORRER LA IMAGEN DIVIDIDA
+        	for(int fila = 0; fila < hx ; fila++) {
+        		for(int columna = 0; columna < hy ; columna++) {
+        			try {           			  
+        				hilos[fila][columna].join();
+                    } catch (InterruptedException ex) {
+                        System.out.println("error" + ex);
+                      }
+        		}
+        	}
+	        	         
+        	         	
+	        
+	        for(int h = 0; h < hx*hy ; h++) {
+	        	//System.out.println("Guardando imagen: "+(i-1)+" Kernel: "+h);
+		        LoadImage.saveImageFromMatrix(lista_de_imagenes[h],"C:/Users/espin/OneDrive/Escritorio/imagenesparcial/"+pathnames[i-1]+"_Kernel_"+h+".jpg");
+        	}
+	        	
+	        
+            
+            
+            
             }
             
 
@@ -217,70 +195,92 @@ class Cliente51 {
     public class convolucion extends Thread {
     	public int[][] imagen;   
     	public BufferedImage input;
-    	public int n,x,y,nro_filas,nro_columnas;
-    	public double[][] kernel = { //kernel blur
-    			/*{0.0625,0.125,0.0625},
-    			{0.125,0.25,0.125},
-    			{0.0625,0.125,0.0625}*/
-    			/*{0.2,0,0,0,0},
-    			{0,0.2,0,0,0},
-    			{0,0,0.2,0,0},
-    			{0,0,0,0.2,0},
-    			{0,0,0,0,0.2}*/
-    			{-1,-1,-1},
-    			{-1,8,-1},
-    			{-1,-1,-1}
+    	public int fila,columna,p,h,k,n,x,y,nro_filas,nro_columnas;
+    	public double[][][] kernel = { //kernel blur
+    			{
+					{0.0625,0.125,0.0625},
+	    			{0.125,0.25,0.125},
+	    			{0.0625,0.125,0.0625}
+    			},
+    			{
+	    			{0.2,0,0,0,0},
+	    			{0,0.2,0,0,0},
+	    			{0,0,0.2,0,0},
+	    			{0,0,0,0.2,0},
+	    			{0,0,0,0,0.2}
+    			},
+    			{
+	    			{-1,-1,-1},
+	    			{-1,8,-1},
+	    			{-1,-1,-1}
+    			},
+    			{
+	    			{0,-1,0},
+	    			{-1,5,-1},
+	    			{0,-1,0}
+    			}
+    			
     			
     	};
-    	convolucion(int n_,int x_, int y_, int nro_filas_, int nro_columnas_,int[][] imagen_,BufferedImage input_) {
-            this.n = n_;
-        	this.x = x_;
-            this.y = y_;
+    	convolucion(int fila_, int columna_, int partes_, int nro_filas_, int nro_columnas_, BufferedImage input_) {
+            this.fila = fila_;
+            this.columna = columna_;
             this.nro_filas = nro_filas_;
             this.nro_columnas = nro_columnas_;
-            this.imagen = imagen_;
             this.input = input_;
+            this.p = partes_;
         }
-        public void run() {        
-        	int sum = 0;    
-        	float red=0f,green=0f,bleu=0f;
-			 
-			//BufferedImage bufferedImage = new BufferedImage(3, 3, BufferedImage.TYPE_INT_RGB);
-			
-        	for (int a = 0; a < kernel.length ;a++) {//parte la matriz en matrices chiquitas de 3x3 
-    			for(int b = 0; b< kernel.length ; b++) {
-    				int submatrizX = (x - kernel.length/2 + a + nro_filas) % nro_filas; //el % soluciona los bordes agregando los pixeles del lado opuesto
-    				int submatrizY = (y - kernel.length/2 + b + nro_columnas) % nro_columnas; 
-    				//submatriz[a][b] = imagen[submatrizX][submatrizY]; 
-    				int RGB = input.getRGB(submatrizX,submatrizY);    
-
-    				int R = (RGB >> 16) & 0xff; // Red Value
-					int G = (RGB >> 8) & 0xff;	// Green Value
-					int B = (RGB) & 0xff;		// Blue Value
-					//System.out.println("R: "+ R+" G: "+G+" B: "+B);	
-					// The RGB is multiplied with current kernel element and added on to the variables red, blue and green
-					//System.out.println("pixel= "+imagen[submatrizX][submatrizY]);
-					red += (R*kernel[a][b]);
-					green += (G*kernel[a][b]);
-					bleu += (B*kernel[a][b]);	      
-    		        
-    		        /*submatriz[a][b] = (bleu + green + red) / 3; */
-						
-    			}
-    		}       	
+        public void run() { 
+        	//CALCULANDO LOS LIMITES DE LA SUBMATRIZ DE LA IMAGEN A OPERAR
         	
-        	//System.out.println("RED: "+ red+" GREEN: "+green+" BLUE: "+bleu);
-        	int outR, outG, outB;
-			
-			outR = Math.min(Math.max((int)red,0),255);
-			outG = Math.min(Math.max((int)green,0),255);
-			outB = Math.min(Math.max((int)bleu,0),255);
-			
-			Color pixelcolor = new Color(outR, outG, outB);
-			sum = pixelcolor.getRGB();
-			//System.out.println("SUM: "+sum+ " RED: "+ red+" GREEN: "+green+" BLUE: "+bleu);
+        	double minX = columna*nro_filas/Math.sqrt(p);
+        	double maxX = minX + nro_filas/Math.sqrt(p);
+        	double minY = fila*nro_columnas/Math.sqrt(p);
+        	double maxY = minY + nro_columnas/Math.sqrt(p);
+        	//System.out.println("hilo: "+h+" minX: "+minX+" maxX: "+maxX+" minY:"+minY+" maxY: "+maxY);
+        	///////////////////////////////////////////////////////////////
+        	for (k = 0 ; k < 4; k++) { // UNA ITERACION POR KERNEL
+        		int sum = 0;  
+	        	for(x = (int) minX; x < maxX ; x++) { // RECORRE FILAS DE LA SUBDIVISION DE LA IMAGEN
+	        		for(y = (int) minY; y < maxY ;y++) { // RECORRE PIXELES DE DICHAS FILA
+	        			
+	        	        	  
+	        	        	float red=0f,green=0f,bleu=0f;
+	        				 
+	        				
+	        	        	for (int a = 0; a < kernel[k].length ;a++) {// RECORRE FILAS DEL KERNEL K  
+	        	    			for(int b = 0; b < kernel[k].length ; b++) {//RECORRE CADA ELEMENTO DE DICHA FILA
+	        	    				int submatrizX = (x - kernel[k].length/2 + a + nro_filas) % nro_filas; //el % soluciona los bordes agregando los pixeles del lado opuesto
+	        	    				int submatrizY = (y - kernel[k].length/2 + b + nro_columnas) % nro_columnas; 
+	        	    				
+	        	    				int RGB = input.getRGB(submatrizX,submatrizY);    
+	        	
+	        	    				int R = (RGB >> 16) & 0xff; // Red Value
+	        						int G = (RGB >> 8) & 0xff;	// Green Value
+	        						int B = (RGB) & 0xff;		// Blue Value
+	        	
+	        						red += (R*kernel[k][a][b]);
+	        						green += (G*kernel[k][a][b]);
+	        						bleu += (B*kernel[k][a][b]);	   
+	        	    			}
+	        	    		}         	
+	        	        	
+	        	        	int outR, outG, outB;
+	        				
+	        				outR = Math.min(Math.max((int)red,0),255);
+	        				outG = Math.min(Math.max((int)green,0),255);
+	        				outB = Math.min(Math.max((int)bleu,0),255);
+	        				
+	        				Color pixelcolor = new Color(outR, outG, outB);
+	        				sum = pixelcolor.getRGB();
+	        	        	//System.out.println("k: "+k+" x: "+x+" y: "+y );
+	        				lista_de_imagenes[k][x][y] = sum;
+	                	
+	        		}
+	        	}
+	        	
+        	}
         	
-        	lista_de_imagenes[n][x][y] = sum;
         }
     }
 
